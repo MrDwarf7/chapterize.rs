@@ -9,6 +9,10 @@ _*/**/*
 .bak/*
 .bak/**/*
 
+.extras/
+.extras/*
+.extras/**/*
+
 debug/
 target/
 *config.to*
@@ -44,8 +48,3 @@ env*
 .idea/
 .idea/*
 .idea/**/*
-
-# prior half-rewrite
-old/
-.extras/
-./.extras/
