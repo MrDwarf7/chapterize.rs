@@ -107,7 +107,7 @@ cargo make a   # if cargo-make is installed (see Makefile.toml)
 Local fetch of arch-matched ffmpeg into a directory (same script CI uses):
 
 ```bash
-./scripts/fetch-ffmpeg.sh x86_64-unknown-linux-gnu /tmp/chapterize-dist
+./build/fetch-ffmpeg.sh x86_64-unknown-linux-gnu /tmp/chapterize-dist
 ```
 
 ## Notes

@@ -70,8 +70,8 @@ jobs:
           cp -f README.md LICENSE "${ARTIFACT_NAME}/" 2>/dev/null || cp -f README.md "${ARTIFACT_NAME}/"
           [[ -f LICENSE ]] && cp -f LICENSE "${ARTIFACT_NAME}/"
 
-          chmod +x scripts/fetch-ffmpeg.sh
-          ./scripts/fetch-ffmpeg.sh "${{ matrix.target }}" "${ARTIFACT_NAME}"
+          chmod +x build/fetch-ffmpeg.sh
+          ./build/fetch-ffmpeg.sh "${{ matrix.target }}" "${ARTIFACT_NAME}"
 
           # Zip from inside the folder so paths are clean
           if command -v zip >/dev/null 2>&1; then
