@@ -18,6 +18,9 @@ log = "0.4.22"
 regex = "1.11.1"
 thiserror = "1.0.65"
 
+[dev-dependencies]
+tempfile = "3.19.1"
+
 # See `./.extras/.cargo_options.toml` for profile option notes.
 
 [profile.dev]

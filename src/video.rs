@@ -71,3 +71,37 @@ pub fn default_output(video: &Path) -> Result<PathBuf> {
     let ext = video.extension().and_then(|e| e.to_str()).unwrap_or("mp4");
     Ok(parent.join(format!("{stem}.chapterized.{ext}")))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_output_changes_extension() {
+        let video = Path::new("/vids/clip.mp4");
+        let out = default_output(video).unwrap();
+        assert_eq!(out, Path::new("/vids/clip.chapterized.mp4"));
+    }
+
+    #[test]
+    fn default_output_no_parent_dot() {
+        let video = Path::new("clip.mp4");
+        let out = default_output(video).unwrap();
+        assert_eq!(out, Path::new("clip.chapterized.mp4"));
+    }
+
+    #[test]
+    fn default_output_unknown_ext_defaults_mp4() {
+        let video = Path::new("/v/clip");
+        let out = default_output(video).unwrap();
+        assert_eq!(out, Path::new("/v/clip.chapterized.mp4"));
+    }
+
+    #[test]
+    fn resolve_video_explicit_requires_file() {
+        let result = resolve_video(Path::new("chapters.txt"), Some(Path::new("/nonexistent/test.mp4")));
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("not a file") || msg.contains("No such"), "got: {msg}");
+    }
+}

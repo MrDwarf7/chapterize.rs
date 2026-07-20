@@ -197,4 +197,60 @@ mod tests {
         assert!(meta.contains("END=4999"));
         assert!(meta.starts_with(";FFMETADATA1"));
     }
+
+    #[test]
+    fn parse_line_errors_on_bad_format() {
+        // No dash separator
+        assert!(Chapter::parse_line(1, "garbage").is_err());
+        // Text before timestamp
+        assert!(Chapter::parse_line(1, "intro 00:30").is_err());
+    }
+
+    #[test]
+    fn parse_line_empty_title_errors() {
+        let result = Chapter::parse_line(1, "00:10 -   ");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_single_digit_hour() {
+        let ch = Chapter::parse_line(1, "1:15:30 - Episode").unwrap().unwrap();
+        assert_eq!(ch.start_ms, (3600 + (15 * 60) + 30) * 1000);
+    }
+
+    #[test]
+    fn escape_ffmeta_backslash() {
+        assert_eq!(escape_ffmeta(r"a\b"), r"a\\b");
+    }
+
+    #[test]
+    fn escape_ffmeta_equals_sign() {
+        assert_eq!(escape_ffmeta("key=value"), r"key\=value");
+    }
+
+    #[test]
+    fn escape_ffmeta_newline() {
+        // The function prefixes real newlines with backslash.
+        assert_eq!(escape_ffmeta("A\nB"), "A\\\nB");
+    }
+
+    #[test]
+    fn load_chapters_errors_on_missing_file() {
+        let result = load_chapters(Path::new("/nonexistent/path/chapters.txt"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn format_ffmetadata_empty_errors() {
+        let result = format_ffmetadata(&[], 1000);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn format_ffmetadata_single_chapter() {
+        let chapters = vec![Chapter { title: "Only".into(), start_ms: 5000 }];
+        let meta = format_ffmetadata(&chapters, 10000).unwrap();
+        assert!(meta.contains("START=5000"));
+        assert!(meta.contains("END=9999"));
+    }
 }

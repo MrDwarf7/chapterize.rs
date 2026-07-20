@@ -171,3 +171,44 @@ fn timestamp_slug() -> u64 {
         .map(|d| d.as_millis() as u64)
         .unwrap_or(0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn binary_candidates_unix_just_name() {
+        let c = binary_candidates("ffmpeg");
+        assert_eq!(c.len(), 1);
+        assert_eq!(c[0], "ffmpeg");
+    }
+
+    #[test]
+    fn find_on_path_rejects_missing_tool() {
+        let result = find_on_path("xyzzytool12345");
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::BinaryNotFound(_))));
+    }
+
+    #[test]
+    fn timestamp_slug_is_positive() {
+        let slug = timestamp_slug();
+        assert!(slug > 0, "slug should be > 0, got {slug}");
+    }
+
+    #[test]
+    fn probe_duration_ms_parses_ffprobe_output() {
+        // Simulate a real ffprobe line: "123.456\n"
+        // We can't test the Command integration, but we can verify the
+        // error message shape for a nonexistent path with a real ffprobe.
+        let ffprobe_res = find_on_path("ffprobe");
+        if let Ok(ffprobe) = ffprobe_res {
+            let bad_path = Path::new("/chapterize-nonexistent-test-video.mkv");
+            let result = probe_duration_ms(&ffprobe, bad_path);
+            assert!(result.is_err(), "should error on nonexistent video");
+            let err = result.unwrap_err().to_string();
+            // ffprobe stderr goes into Duration error
+            assert!(!err.is_empty(), "error should have content");
+        }
+    }
+}

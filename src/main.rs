@@ -1,15 +1,8 @@
-mod chapters;
-mod cli;
-mod error;
-mod ffmpeg;
-mod prelude;
-mod video;
-
-use chapters::load_chapters;
-use cli::Cli;
-use ffmpeg::chapterize;
-use prelude::*;
-use video::{default_output, resolve_video};
+use chapterize::chapters::load_chapters;
+use chapterize::cli::Cli;
+use chapterize::ffmpeg::chapterize;
+use chapterize::prelude::*;
+use chapterize::video::{default_output, resolve_video};
 
 fn main() {
     init_logging();
@@ -46,7 +39,7 @@ fn run() -> Result<()> {
     };
     info!("output: {}", output.display());
 
-    chapterize(ffmpeg::RunOpts {
+    chapterize(chapterize::ffmpeg::RunOpts {
         video: &video,
         output: &output,
         chapters: &chapters,
