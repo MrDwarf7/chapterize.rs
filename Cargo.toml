@@ -1,31 +1,31 @@
-cargo-features = ["codegen-backend", "trim-paths"]
+cargo-features = [ "codegen-backend", "trim-paths" ]
 # cargo-features = ["codegen-backend", "profile-rustflags", "trim-paths"]
 # The above also needs profile.dev codegen-backend uncommented to use cranelift
 
 [package]
-name = "chapterize"
-version = "0.1.0"
-authors = ["MrDwarf7", "Blake B. <github.com/MrDwarf7>"]
-edition = "2024"
-description = "Apply YouTube-style chapters to a video with ffmpeg."
+name         = "chapterize"
+version      = "0.1.0"
+authors      = [ "MrDwarf7", "Blake B. <github.com/MrDwarf7>" ]
+edition      = "2024"
+description  = "Apply YouTube-style chapters to a video with ffmpeg."
 license-file = "LICENSE"
-readme = "README.md"
-build = "build.rs"
+readme       = "README.md"
+build        = "build.rs"
 
 [package.metadata.winresource]
 OriginalFilename = "chapterize.exe"
-FileDescription = "Apply YouTube-style chapters to a video with ffmpeg."
-LegalCopyright = "Copyright (c) Blake B. @github.com/MrDwarf7"
+FileDescription  = "Apply YouTube-style chapters to a video with ffmpeg."
+LegalCopyright   = "Copyright (c) Blake B. @github.com/MrDwarf7"
 
 [target.'cfg(windows)'.build-dependencies]
 winresource = "0.1.19"
 
 [dependencies]
-clap = { version = "4.5.20", features = ["derive"] }
+clap       = { version = "4.5.20", features = [ "derive" ] }
 env_logger = "0.11.5"
-log = "0.4.22"
-regex = "1.11.1"
-thiserror = "1.0.65"
+log        = "0.4.22"
+regex      = "1.11.1"
+thiserror  = "1.0.65"
 
 [dev-dependencies]
 tempfile = "3.19.1"
@@ -33,37 +33,37 @@ tempfile = "3.19.1"
 # See `./.extras/.cargo_options.toml` for profile option notes.
 
 [profile.dev]
-opt-level = 1
-codegen-units = 256
-incremental = true
-codegen-backend = "cranelift"
-debug = "line-tables-only"
+opt-level        = 1
+codegen-units    = 256
+incremental      = true
+codegen-backend  = "cranelift"
+debug            = "line-tables-only"
 debug-assertions = true
-overflow-checks = true
-strip = "none"
-panic = "abort"
-lto = "off"
-trim-paths = "none"
+overflow-checks  = true
+strip            = "none"
+panic            = "abort"
+lto              = "off"
+trim-paths       = "none"
 
 [profile.release]
-opt-level = 3
-codegen-units = 1
-incremental = false
-codegen-backend = "cranelift"
-debug = "none"
+opt-level        = 3
+codegen-units    = 1
+incremental      = false
+codegen-backend  = "cranelift"
+debug            = "none"
 debug-assertions = false
-overflow-checks = false
-strip = "symbols"
-panic = "unwind"
-lto = "off"
-trim-paths = ["diagnostics", "object"]
+overflow-checks  = false
+strip            = "symbols"
+panic            = "unwind"
+lto              = "off"
+trim-paths       = [ "diagnostics", "object" ]
 
 [profile.dev.package."*"]
-inherits = "release"
+inherits        = "release"
 codegen-backend = "cranelift"
 
 [profile.release.package."*"]
-inherits = "release"
+inherits        = "release"
 codegen-backend = "cranelift"
 
 # Lint levels: 0 = forbid, 1 = deny, 2 = warn, 3 = allow
