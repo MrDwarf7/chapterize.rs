@@ -33,7 +33,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: ./.github/actions/checkout
 
       - uses: ./.github/actions/setup-rust
         with:
@@ -71,7 +71,7 @@ jobs:
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: ./.github/actions/checkout
 
       - uses: ./.github/actions/setup-rust
         with:
@@ -108,7 +108,7 @@ jobs:
     needs: [build-unix, build-windows]
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v7
+        uses: ./.github/actions/checkout
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -141,7 +141,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Checkout sources
-        uses: actions/checkout@v7
+        uses: ./.github/actions/checkout
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
