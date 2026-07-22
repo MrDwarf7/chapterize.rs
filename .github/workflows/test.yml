@@ -40,5 +40,17 @@ jobs:
         with:
           target: "${{ matrix.target }}"
 
+      - name: "Install ffmpeg (Linux)"
+        if: "runner.os == 'Linux'"
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: "Install ffmpeg (Windows)"
+        if: "runner.os == 'Windows'"
+        shell: "powershell"
+        run: |
+          choco install ffmpeg -y --no-progress
+
       - name: "Run Cargo test"
         run: "cargo test --all --locked --target ${{ matrix.target }}"
