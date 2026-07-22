@@ -1,11 +1,10 @@
 name: "Draft"
-
 on:
   push:
     branches:
       - master
       - main
-    tags: ["v[0-9]+.[0-9]+.[0-9]??"]
+    tags: ["v[0-9]+.[0-9]+.[0-9]?"]
   workflow_dispatch:
 
 concurrency:
@@ -13,84 +12,92 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  PROJECT_NAME: chapterize
   NIGHTLY_BODY: ${{ github.event.release.body }}
+  LICENSE_FILE_REG: LICENS*|LICENSE-*|LICENSE-MIT|LICENSE-APACHE
+  LICENSE_FILES_WINDOWS: LICENSE*
   GITHUB_BRANCH_TAG_NAME: ${{ github.ref_name }}
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: 1
   SCCACHE_GHA_ENABLED: true
   RUSTC_WRAPPER: sccache
+  PROJECT_NAME: chapterize
 
 jobs:
-  build:
-    name: "Draft - ${{ matrix.target }}"
+  build-unix:
+    name: "Draft - build-unix"
     strategy:
-      fail-fast: false
       matrix:
         include:
-          # Linux
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-          # Windows
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: windows-11-arm
-            target: aarch64-pc-windows-msvc
-          # macOS
-          - os: macos-13
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@v7
+
       - uses: ./.github/actions/setup-rust
         with:
           target: ${{ matrix.target }}
 
-      - name: Build chapterize
-        shell: bash
-        run: cargo build --release --locked --target "${{ matrix.target }}"
-
       - name: Pack release dir (with bundled ffmpeg)
         shell: bash
         run: |
-          set -euo pipefail
-          ARTIFACT_NAME="chapterize-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}"
+          export ARTIFACT_NAME="${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}"
+          export LICENSE_FILE="${{ env.LICENSE_FILE_REG }}"
+          cargo build --release --locked --target "${{ matrix.target }}"
           mkdir -p "${ARTIFACT_NAME}"
-
-          BIN_SRC="target/${{ matrix.target }}/release/chapterize"
-          if [[ "${{ matrix.target }}" == *windows* ]]; then
-            BIN_SRC="${BIN_SRC}.exe"
-          fi
-          cp -f "${BIN_SRC}" "${ARTIFACT_NAME}/"
-
-          cp -f README.md LICENSE "${ARTIFACT_NAME}/" 2>/dev/null || cp -f README.md "${ARTIFACT_NAME}/"
-          [[ -f LICENSE ]] && cp -f LICENSE "${ARTIFACT_NAME}/"
-
+          cp "target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}" "${ARTIFACT_NAME}"
           chmod +x build/fetch-ffmpeg.sh
           ./build/fetch-ffmpeg.sh "${{ matrix.target }}" "${ARTIFACT_NAME}"
-
-          # Zip from inside the folder so paths are clean
-          if command -v zip >/dev/null 2>&1; then
-            (cd "${ARTIFACT_NAME}" && zip -r "../${ARTIFACT_NAME}.zip" .)
-          else
-            # Windows runners without zip: use PowerShell compress
-            powershell.exe -NoProfile -Command \
-              "Compress-Archive -Path '${ARTIFACT_NAME}\*' -DestinationPath '${ARTIFACT_NAME}.zip' -Force"
-          fi
-          ls -lah "${ARTIFACT_NAME}.zip"
-          ls -lah "${ARTIFACT_NAME}"
+          find . -maxdepth 1 -type f -regex ".*\(${LICENSE_FILE}\)" -exec sh -c 'cp README.md "$@" "${ARTIFACT_NAME}"' _ {} +
+          cd "${ARTIFACT_NAME}"
+          zip -r "../${ARTIFACT_NAME}.zip" .
+          cd ..
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chapterize-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}
-          path: chapterize-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}.zip
-          if-no-files-found: error
-          compression-level: "9"
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}
+          path: ${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}.zip
+          if-no-files-found: 'error'
+          compression-level: '9'
+
+  build-windows:
+    name: "Draft - build-windows"
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-rust
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Pack artifact
+        shell: powershell
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ARTIFACT_NAME="${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}"
+          $LICENSE_FILE="${{ env.LICENSE_FILES_WINDOWS }}"
+          New-Item -ItemType Directory -Path "$ARTIFACT_NAME"
+          Copy-Item -Path "target\\${{ matrix.target }}\\release\\${{ env.PROJECT_NAME }}.exe" -Destination "$ARTIFACT_NAME"
+          Copy-Item -Path "README.md", "$LICENSE_FILE" -Destination "$ARTIFACT_NAME"
+          Compress-Archive -Path "$ARTIFACT_NAME\*" -Destination "$ARTIFACT_NAME.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}
+          path: ${{ env.PROJECT_NAME }}-${{ matrix.target }}-${{ env.GITHUB_BRANCH_TAG_NAME }}.zip
+          if-no-files-found: 'error'
+          compression-level: '9'
 
   draft:
     name: "Draft - draft"
@@ -98,33 +105,25 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build-unix, build-windows]
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
+        id: artifact-download-step
         with:
           merge-multiple: true
 
-      - name: Draft release
+      - name: Draft
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           draft: true
           files: |
-            chapterize-*
+            ${{ env.PROJECT_NAME }}-*
           generate_release_notes: true
-          body: |
-            ## Bundled tools
-            Each zip contains:
-            - `chapterize` (or `chapterize.exe`)
-            - `ffmpeg` / `ffprobe` matched to the target arch
-            - `README.md`, `LICENSE`, `FFMPEG_NOTICE.txt`
-            - `third_party/ffmpeg/` upstream attribution
-
-            FFmpeg is a **separate** program (LGPL static builds on Linux/Windows via BtbN; macOS via eugeneware/ffmpeg-static). Delete the bundled binaries anytime and use system installs on `PATH` instead.
 
   nightly:
     name: "Draft - nightly"
@@ -132,16 +131,14 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build-unix, build-windows]
     steps:
       - name: Generate nightly body
         run: |
-          echo 'NIGHTLY_BODY<<EOF' >> "$GITHUB_ENV"
-          echo "From commit: ${GITHUB_SHA:0:8}" >> "$GITHUB_ENV"
-          echo "Generated on: $(date -u +"%Y-%m-%d %H:%M") UTC" >> "$GITHUB_ENV"
-          echo "" >> "$GITHUB_ENV"
-          echo "Zips include chapterize + arch-matched ffmpeg/ffprobe." >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
+          echo 'NIGHTLY_BODY<<EOF' >> $GITHUB_ENV
+          echo "From commit: ${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+          echo "Generated on: $(date -u +\"%Y-%m-%d %H:%M\") UTC" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Checkout sources
         uses: actions/checkout@v7
@@ -164,7 +161,7 @@ jobs:
           prerelease: true
           fail_on_unmatched_files: true
           files: |
-            chapterize-*
+            ${{ env.PROJECT_NAME }}-*
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
           target_commitish: ${{ github.sha }}
