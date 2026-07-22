@@ -16,19 +16,13 @@ fn run() -> Result<()> {
     let cli = Cli::parse_args();
     debug!("cli: {cli:?}");
 
-    let chapters_path = cli.input_chapters.canonicalize().map_err(|e| {
-        Error::Path(format!(
-            "chapters file {}: {e}",
-            cli.input_chapters.display()
-        ))
-    })?;
+    let chapters_path = cli
+        .input_chapters
+        .canonicalize()
+        .map_err(|e| Error::Path(format!("chapters file {}: {e}", cli.input_chapters.display())))?;
 
     let chapters = load_chapters(&chapters_path)?;
-    info!(
-        "loaded {} chapters from {}",
-        chapters.len(),
-        chapters_path.display()
-    );
+    info!("loaded {} chapters from {}", chapters.len(), chapters_path.display());
 
     let video = resolve_video(&chapters_path, cli.video.as_deref())?;
     info!("video: {}", video.display());
@@ -40,19 +34,18 @@ fn run() -> Result<()> {
     info!("output: {}", output.display());
 
     chapterize(chapterize::ffmpeg::RunOpts {
-        video: &video,
-        output: &output,
-        chapters: &chapters,
+        video:     &video,
+        output:    &output,
+        chapters:  &chapters,
         overwrite: cli.overwrite,
-        dry_run: cli.dry_run,
+        dry_run:   cli.dry_run,
     })?;
 
     Ok(())
 }
 
 fn init_logging() {
-    let mut builder =
-        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
+    let mut builder = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
     builder.format_timestamp_secs();
     let _ = builder.try_init();
 }

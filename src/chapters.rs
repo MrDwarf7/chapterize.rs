@@ -248,7 +248,10 @@ mod tests {
 
     #[test]
     fn format_ffmetadata_single_chapter() {
-        let chapters = vec![Chapter { title: "Only".into(), start_ms: 5000 }];
+        let chapters = vec![Chapter {
+            title:    "Only".into(),
+            start_ms: 5000,
+        }];
         let meta = format_ffmetadata(&chapters, 10000).unwrap();
         assert!(meta.contains("START=5000"));
         assert!(meta.contains("END=9999"));

@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+
 use tempfile::TempDir;
 
 /// Create a tempdir with the given dummy video files.
@@ -45,20 +46,12 @@ fn resolve_video_ambiguous_when_many() {
 
 #[test]
 fn resolve_video_prefers_non_copy() {
-    let dir = setup_video_dir(&[
-        "original.mp4",
-        "original.chapterized.mp4",
-        "chapters.txt",
-    ]);
+    let dir = setup_video_dir(&["original.mp4", "original.chapterized.mp4", "chapters.txt"]);
     let chapters = dir.path().join("chapters.txt");
     std::fs::write(&chapters, "00:00 - Test\n").unwrap();
 
     let found = chapterize::video::resolve_video(&chapters, None).unwrap();
-    assert_eq!(
-        found.file_name().unwrap(),
-        "original.mp4",
-        "should skip .chapterized. variant"
-    );
+    assert_eq!(found.file_name().unwrap(), "original.mp4", "should skip .chapterized. variant");
 }
 
 #[test]

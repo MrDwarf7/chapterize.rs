@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::process::Command;
 
-use crate::chapters::{format_ffmetadata, Chapter};
+use crate::chapters::{Chapter, format_ffmetadata};
 use crate::prelude::*;
 
 /// Locate `ffmpeg` / `ffprobe`.
