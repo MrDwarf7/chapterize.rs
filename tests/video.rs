@@ -68,9 +68,10 @@ fn resolve_video_errors_on_no_video() {
 
 #[test]
 fn default_output_appends_chapterized() {
-    let video = PathBuf::from("/path/to/video.mp4");
+    let video = PathBuf::from("path").join("to").join("video.mp4");
     let out = chapterize::video::default_output(&video).unwrap();
-    assert_eq!(out.to_str().unwrap(), "/path/to/video.chapterized.mp4");
+    assert_eq!(out.file_name().and_then(|n| n.to_str()), Some("video.chapterized.mp4"));
+    assert_eq!(out.parent(), video.parent());
 }
 
 #[test]
@@ -88,5 +89,7 @@ fn explicit_video_overrides_scan() {
     let explicit = dir.path().join("b.mp4");
 
     let found = chapterize::video::resolve_video(&chapters, Some(&explicit)).unwrap();
-    assert_eq!(found, explicit);
+    // resolve_video canonicalizes; compare file names / canonical forms.
+    assert_eq!(found.file_name().unwrap(), "b.mp4");
+    assert_eq!(found, explicit.canonicalize().unwrap());
 }
