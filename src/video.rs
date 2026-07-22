@@ -102,6 +102,13 @@ mod tests {
         let result = resolve_video(Path::new("chapters.txt"), Some(Path::new("/nonexistent/test.mp4")));
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("not a file") || msg.contains("No such"), "got: {msg}");
+        // Linux: "No such file or directory"; Windows: "The system cannot find the path specified."
+        // Also accepts our own "not a file" wording if canonicalize somehow succeeds.
+        let ok = msg.contains("not a file")
+            || msg.contains("No such")
+            || msg.contains("cannot find")
+            || msg.contains("cannot find the path")
+            || msg.contains("os error");
+        assert!(ok, "got: {msg}");
     }
 }
