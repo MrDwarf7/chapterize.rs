@@ -177,10 +177,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn binary_candidates_unix_just_name() {
+    fn binary_candidates_include_name() {
         let c = binary_candidates("ffmpeg");
-        assert_eq!(c.len(), 1);
+        assert!(!c.is_empty());
         assert_eq!(c[0], "ffmpeg");
+        #[cfg(windows)]
+        {
+            assert_eq!(c.len(), 2);
+            assert_eq!(c[1], "ffmpeg.exe");
+        }
+        #[cfg(not(windows))]
+        {
+            assert_eq!(c.len(), 1);
+        }
     }
 
     #[test]
