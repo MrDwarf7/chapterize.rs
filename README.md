@@ -1,16 +1,21 @@
 <!-- PROJECT LOGO / BANNER -->
 <p align="center">
-  <img src="assets/logo.svg" alt="chapterize" width="150">
+  <img src="assets/README-header.png" alt="chapterize" width="100%">
 </p>
 
 <p align="center">
-  <strong>chapterize</strong> — Apply YouTube-style chapter markers to video files
+  <img src="assets/icon-128.png" alt="chapterize icon" width="64">
+</p>
+
+<p align="center">
+  <strong>chapterize</strong> -- Apply YouTube-style chapter markers to video files
   <br>
   <a href="https://crates.io/crates/chapterize"><img src="https://img.shields.io/crates/v/chapterize" alt="crates.io"></a>
   <a href="https://github.com/mrdwarf7/chapterize.rs/actions/workflows/build.yml"><img src="https://github.com/mrdwarf7/chapterize.rs/actions/workflows/build.yml/badge.svg" alt="build"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="license"></a>
   <a href="https://github.com/mrdwarf7/chapterize.rs/releases"><img src="https://img.shields.io/github/v/release/mrdwarf7/chapterize.rs" alt="release"></a>
 </p>
+
 
 <!-- TAGLINE + DESCRIPTION -->
 ## chapterize
